@@ -1,0 +1,10 @@
+$-- Title only; the rest of the title page and the abstract come from bmj.lua.
+$if(title)$
+\begin{flushleft}
+{\large\bfseries $title$\par}
+$if(subtitle)$
+\vspace{0.5\baselineskip}
+{\bfseries $subtitle$\par}
+$endif$
+\end{flushleft}
+$endif$

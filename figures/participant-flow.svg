@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="432" height="300" viewBox="0 0 432 300" role="img" aria-label="Flow of participants through the study">
+<rect width="100%" height="100%" fill="#ffffff" />
+<g fill="none" stroke="#000000" stroke-width="0.8">
+<rect x="96" y="16" width="240" height="44" />
+<rect x="250" y="78" width="170" height="56" />
+<rect x="116" y="164" width="200" height="32" />
+<rect x="24" y="238" width="170" height="44" />
+<rect x="238" y="238" width="170" height="44" />
+<line x1="216" y1="60" x2="216" y2="164" />
+<line x1="216" y1="106" x2="250" y2="106" />
+<line x1="216" y1="196" x2="216" y2="216" />
+<line x1="109" y1="216" x2="323" y2="216" />
+<line x1="109" y1="216" x2="109" y2="238" />
+<line x1="323" y1="216" x2="323" y2="238" />
+</g>
+<g fill="#000000">
+<polygon points="216,164 212,156 220,156" />
+<polygon points="250,106 242,102 242,110" />
+<polygon points="109,238 105,230 113,230" />
+<polygon points="323,238 319,230 327,230" />
+</g>
+<g font-family="Helvetica, Arial, sans-serif" font-size="10" fill="#000000">
+<text x="104" y="34" xml:space="preserve">Adults registered with 12 participating</text>
+<text x="104" y="47" xml:space="preserve">general practices (n=48 210)</text>
+<text x="258" y="96" xml:space="preserve">Excluded (n=6135):</text>
+<text x="258" y="109" xml:space="preserve">  Previous diagnosis (n=4902)</text>
+<text x="258" y="122" xml:space="preserve">  Incomplete records (n=1233)</text>
+<text x="124" y="182" xml:space="preserve">Included in cohort (n=42 075)</text>
+<text x="32" y="256" xml:space="preserve">Exposed</text>
+<text x="32" y="269" xml:space="preserve">(n=9812)</text>
+<text x="246" y="256" xml:space="preserve">Unexposed</text>
+<text x="246" y="269" xml:space="preserve">(n=32 263)</text>
+</g></svg>

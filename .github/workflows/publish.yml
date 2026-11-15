@@ -1,0 +1,69 @@
+name: Render and publish preview
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    name: Render (Quarto ${{ matrix.quarto }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # oldest supported version (quarto-required) and the current release
+        quarto: ["1.7.24", "release"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          version: ${{ matrix.quarto }}
+          tinytex: true
+
+      - name: Render PDF, HTML and Word
+        run: quarto render template.qmd
+
+      - name: Check outputs
+        run: |
+          test -f template.pdf
+          test -f template.html
+          test -f template.docx
+          test -f template-figures/figure-1.pdf
+
+      - name: Assemble preview site
+        if: matrix.quarto == 'release'
+        run: |
+          mkdir -p _site
+          cp template.html _site/index.html
+          cp -r figures template-figures template.pdf template.docx _site/
+          if [ -d template_files ]; then cp -r template_files _site/; fi
+          touch _site/.nojekyll
+
+      - uses: actions/upload-pages-artifact@v5
+        if: matrix.quarto == 'release'
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: render
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5

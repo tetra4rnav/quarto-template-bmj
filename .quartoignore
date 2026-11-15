@@ -1,0 +1,11 @@
+# Files not copied by `quarto use template`
+scripts/
+tests/
+*.pdf
+!figures/*.pdf
+*.docx
+*.html
+_site/
+*-figures/
+*_files/
+.github/

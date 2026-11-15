@@ -1,0 +1,62 @@
+%PDF-1.4
+%‚„œ”
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 432 300] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 919 >>
+stream
+0.8 w 0 0 0 RG 0 0 0 rg
+96 240 240 44 re S
+BT /F1 10 Tf 104 266 Td (Adults registered with 12 participating) Tj ET
+BT /F1 10 Tf 104 253 Td (general practices \(n=48 210\)) Tj ET
+250 166 170 56 re S
+BT /F1 10 Tf 258 204 Td (Excluded \(n=6135\):) Tj ET
+BT /F1 10 Tf 258 191 Td (  Previous diagnosis \(n=4902\)) Tj ET
+BT /F1 10 Tf 258 178 Td (  Incomplete records \(n=1233\)) Tj ET
+116 104 200 32 re S
+BT /F1 10 Tf 124 118 Td (Included in cohort \(n=42 075\)) Tj ET
+24 18 170 44 re S
+BT /F1 10 Tf 32 44 Td (Exposed) Tj ET
+BT /F1 10 Tf 32 31 Td (\(n=9812\)) Tj ET
+238 18 170 44 re S
+BT /F1 10 Tf 246 44 Td (Unexposed) Tj ET
+BT /F1 10 Tf 246 31 Td (\(n=32 263\)) Tj ET
+216 240 m 216 136 l S
+216 194 m 250 194 l S
+216 104 m 216 84 l S
+109 84 m 323 84 l S
+109 84 m 109 62 l S
+323 84 m 323 62 l S
+216 136 m 212 144 l 220 144 l h f
+250 194 m 242 198 l 242 190 l h f
+109 62 m 105 70 l 113 70 l h f
+323 62 m 319 70 l 327 70 l h f
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>
+endobj
+6 0 obj
+<< /Title (Participant flow) /Producer (make-example-figure.py) >>
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000015 00000 n 
+0000000064 00000 n 
+0000000121 00000 n 
+0000000247 00000 n 
+0000001216 00000 n 
+0000001313 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R /Info 6 0 R >>
+startxref
+1395
+%%EOF

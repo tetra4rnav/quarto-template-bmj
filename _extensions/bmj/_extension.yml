@@ -1,0 +1,54 @@
+title: BMJ
+author: quarto-template-bmj contributors
+version: 0.2.0
+quarto-required: ">= 1.7.24"
+contributes:
+  formats:
+    common:
+      lang: en-GB
+      csl: bmj.csl
+      number-sections: false
+      fig-dpi: 300
+      # Manuscripts show results, not code
+      echo: false
+      filters:
+        - path: bmj.lua
+          at: post-quarto
+    pdf:
+      # Preview / sharing copy with line numbers and double spacing
+      toc: false
+      documentclass: article
+      papersize: a4
+      fontsize: 12pt
+      geometry:
+        - margin=2.54cm
+      colorlinks: true
+      linkcolor: black
+      citecolor: black
+      urlcolor: blue
+      default-image-extension: pdf
+      include-in-header: bmj.tex
+      template-partials:
+        - partials/title.tex
+        - partials/before-body.tex
+    html:
+      # Online preview using Quarto's title block for authors and abstract
+      toc: true
+      toc-title: Contents
+      theme:
+        - default
+        - bmj.scss
+      default-image-extension: svg
+      title-block-banner: false
+      citations-hover: true
+      crossrefs-hover: true
+      format-links: true
+    docx:
+      # Submission file: BMJ only accepts Word documents
+      toc: false
+      reference-doc: bmj-reference.docx
+      default-image-extension: pdf
+      # Figures are uploaded separately (bmj.figures: separate), so computed
+      # figures are written as vector PDF, a format BMJ accepts. Set
+      # fig-format: png if you use bmj.figures: inline with Word.
+      fig-format: pdf

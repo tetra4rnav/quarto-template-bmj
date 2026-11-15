@@ -1,0 +1,31 @@
+% BMJ manuscript layout for the bmj-pdf format (preview / sharing copy).
+% The BMJ only accepts Word files for submission; use bmj-docx for that.
+
+% Double spacing and continuous line numbers for reviewers
+\usepackage{setspace}
+\doublespacing
+\usepackage{lineno}
+\linenumbers
+
+% Block paragraphs
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.5\baselineskip}
+
+% Heading hierarchy: BOLD CAPS, bold lower case, Plain text, Italics
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\normalsize\bfseries}{\thesection}{1em}{\MakeUppercase}
+\titleformat{\subsection}{\normalfont\normalsize\bfseries}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize}{\thesubsubsection}{1em}{}
+\titleformat{\paragraph}[hang]{\normalfont\normalsize\itshape}{\theparagraph}{1em}{}
+\titlespacing*{\section}{0pt}{1.5ex plus .5ex minus .2ex}{0pt}
+\titlespacing*{\subsection}{0pt}{1.2ex plus .5ex minus .2ex}{0pt}
+\titlespacing*{\subsubsection}{0pt}{1.2ex plus .5ex minus .2ex}{0pt}
+\titlespacing*{\paragraph}{0pt}{1.2ex plus .5ex minus .2ex}{0pt}
+
+% "What is already known / What this study adds" box
+\usepackage{framed}
+\newenvironment{bmjbox}{%
+  \begin{framed}\setlength{\parskip}{0.25\baselineskip}%
+}{%
+  \end{framed}%
+}

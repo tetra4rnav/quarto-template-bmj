@@ -1,0 +1,19 @@
+# Quarto build output
+/.quarto/
+*_files/
+*-figures/
+/template.docx
+/template.pdf
+/template.html
+/template.tex
+/_site/
+/tests/*.docx
+/tests/*.pdf
+
+# Third-party guidance saved locally (copyright BMJ); do not commit
+/*.pdf
+
+# OS / editor
+.DS_Store
+Thumbs.db
+__pycache__/

@@ -1,0 +1,75 @@
+/*-- scss:defaults --*/
+
+$font-family-sans-serif: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-size-root: 17px;
+$line-height-base: 1.6;
+$link-color: #1f5fa8;
+$toc-font-size: 0.85rem;
+
+/*-- scss:rules --*/
+
+// BMJ heading hierarchy: BOLD CAPS, bold lower case, Plain text, Italics
+#quarto-document-content {
+  section.level1 > h1 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: none;
+    margin-top: 2.25rem;
+  }
+
+  section.level2 > h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    border-bottom: none;
+    margin-top: 1.5rem;
+  }
+
+  section.level3 > h3 {
+    font-size: 1rem;
+    font-weight: 400;
+    margin-top: 1.25rem;
+  }
+
+  section.level4 > h4 {
+    font-size: 1rem;
+    font-weight: 400;
+    font-style: italic;
+    margin-top: 1rem;
+  }
+}
+
+// Structured abstract in the title block: keep run-in headings tight
+#title-block-header .abstract p {
+  margin-bottom: 0.5rem;
+}
+
+// "What is already known on this topic / What this study adds"
+.summary-box {
+  border: 1px solid $body-color;
+  border-radius: 0.25rem;
+  padding: 1rem 1.25rem 0.25rem;
+  margin: 1.5rem 0 2rem;
+
+  p {
+    margin-bottom: 0.25rem;
+  }
+
+  ul {
+    margin-bottom: 0.75rem;
+  }
+}
+
+// End-of-manuscript statements
+.bmj-statements {
+  font-size: 0.95rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid $border-color;
+}
+
+// Numbered reference list
+#refs .csl-entry {
+  margin-bottom: 0.5rem;
+}
