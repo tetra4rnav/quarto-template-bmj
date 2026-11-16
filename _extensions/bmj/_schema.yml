@@ -1,0 +1,114 @@
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+# Editor support (Quarto Wizard): completion, validation and hover help for
+# the options read by bmj.lua. Each format accepts a `bmj` object, written as
+#
+#   format:
+#     bmj-docx:
+#       bmj:
+#         figures: inline
+#
+# A `bmj` key at the top level of the front matter is read too and applies to
+# every format. Format-level values take precedence over top-level ones.
+
+formats:
+  bmj-pdf:
+    bmj:
+      type: object
+      title: BMJ options
+      description: "Options for the BMJ filter (all optional). Values here override a top-level `bmj` key."
+      additionalProperties: false
+      properties:
+        figures:
+          type: string
+          enum: [inline, separate]
+          default: inline
+          description: "`inline` keeps figures in the text. `separate` removes labelled figures from the body, exports their image files for upload and lists their captions under Figure legends."
+        export-figures: &export-figures
+          type: boolean
+          default: true
+          description: "With `figures: separate`, copy each labelled figure's image file to the figure directory as figure-1.pdf, figure-2a.png and so on, ready for upload."
+        figure-dir: &figure-dir
+          type: string
+          description: "Directory for exported figure files, relative to the document. Defaults to `<document-name>-figures`."
+          completion:
+            type: directory
+        flatten-tables: &flatten-tables
+          type: boolean
+          default: true
+          description: "Word only: write captioned tables as plain Word tables instead of Quarto's layout table. Has no effect in other formats."
+        word-count: &word-count
+          type: boolean
+          default: true
+          description: "Show the main-text and abstract word counts on the title page and report them in the render log."
+        abstract-word-limit: &abstract-word-limit
+          type: integer
+          minimum: 1
+          default: 300
+          description: "Warn when the abstract is longer than this many words. The BMJ asks for 250-300 words (up to 400 for CONSORT or PRISMA abstracts)."
+        page-breaks:
+          type: boolean
+          default: true
+          description: "Insert page breaks after the title page, after the abstract and before the figure legends."
+        title-page:
+          type: boolean
+          default: true
+          description: "Build the BMJ title page (authors, job titles, addresses, corresponding author, keywords, word count) and move the abstract into the body."
+
+  bmj-html:
+    bmj:
+      type: object
+      title: BMJ options
+      description: "Options for the BMJ filter (all optional). Values here override a top-level `bmj` key."
+      additionalProperties: false
+      properties:
+        figures:
+          type: string
+          enum: [inline, separate]
+          default: inline
+          description: "`inline` keeps figures in the text. `separate` removes labelled figures from the body, exports their image files for upload and lists their captions under Figure legends."
+        export-figures: *export-figures
+        figure-dir: *figure-dir
+        flatten-tables: *flatten-tables
+        word-count: *word-count
+        abstract-word-limit: *abstract-word-limit
+        page-breaks:
+          type: boolean
+          default: false
+          description: "Insert page breaks (shown as horizontal rules in HTML) after the title page, after the abstract and before the figure legends."
+        title-page:
+          type: boolean
+          default: false
+          description: "Build the BMJ title page in the body instead of using Quarto's own title block for authors, affiliations and abstract."
+
+  bmj-docx:
+    bmj:
+      type: object
+      title: BMJ options
+      description: "Options for the BMJ filter (all optional). Values here override a top-level `bmj` key."
+      additionalProperties: false
+      properties:
+        figures:
+          type: string
+          enum: [separate, inline]
+          default: separate
+          description: "`separate` (the BMJ submission layout) removes labelled figures from the body, exports their image files for upload and lists their captions under Figure legends. `inline` keeps figures in the text; set `fig-format: png` with it, because Word cannot display PDF images."
+        export-figures: *export-figures
+        figure-dir: *figure-dir
+        flatten-tables: *flatten-tables
+        word-count: *word-count
+        abstract-word-limit: *abstract-word-limit
+        page-breaks:
+          type: boolean
+          default: true
+          description: "Insert page breaks after the title page, after the abstract and before the figure legends."
+        title-page:
+          type: boolean
+          default: true
+          description: "Build the BMJ title page (authors, job titles, addresses, corresponding author, keywords, word count) and move the abstract into the body."
+
+classes:
+  bmj-statements:
+    description: "Wraps the end-of-manuscript statements (contributors, funding, competing interests and so on). Text inside is left out of the word count."
+  no-wordcount:
+    description: "Leaves the text of this div out of the BMJ word count."

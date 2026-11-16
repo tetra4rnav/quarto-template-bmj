@@ -62,7 +62,8 @@ summary-box:
   adds:
     - Give a simple answer to "what do we now know as a result of this study that we did not know before?", with the single most useful summary statistic.
 bibliography: references.bib
-# Options for the BMJ filter (all optional)
+# Options for the BMJ filter (all optional). They can also go under a format,
+# e.g. format: bmj-docx: bmj: figures: inline, which editors check (Quarto Wizard).
 # bmj:
 #   figures: separate        # docx default; pdf and html default to "inline"
 #   export-figures: true     # copy figure files to <name>-figures/ for upload
