@@ -1,0 +1,199 @@
+{
+  "BMJ front matter": {
+    "prefix": "front-matter",
+    "body": [
+      "---",
+      "# Informative title with the study design as a subtitle (The BMJ requirement)",
+      "title: \"${1:Title of the article}: ${2:a prospective cohort study}\"",
+      "author:",
+      "  - name: ${3:Jane Doe}",
+      "    orcid: ${4:0000-0000-0000-0000}",
+      "    email: ${5:jane.doe@example.org}",
+      "    corresponding: true           # exactly one corresponding author",
+      "    position: ${6:senior lecturer}     # job title shown under the address",
+      "    affiliations:",
+      "      - id: ${7:aff1}",
+      "        department: ${8:Department of Epidemiology}",
+      "        name: ${9:Example University}",
+      "        address: ${10:1 Example Street}",
+      "        city: ${11:London}",
+      "        postal-code: ${12:WC1E 0AA}",
+      "        country: ${13:UK}",
+      "# Structured abstract: 250-300 words (up to 400 for CONSORT/PRISMA abstracts).",
+      "# No references in the abstract.",
+      "abstract: |",
+      "  **Objectives** ${14:State the main aim of the study and the major hypothesis tested or research question posed.}",
+      "",
+      "  **Design** ${15:Give the study design, for example prospective cohort study.}",
+      "",
+      "  **Setting** ${16:Describe the level of care (primary, secondary) and the number of participating centres; give the geographical location if important.}",
+      "",
+      "  **Participants** ${17:Give the numbers entering and completing the study, with sex and ethnic group if appropriate, and how participants were selected.}",
+      "",
+      "  **Interventions** ${18:Describe what, how, when, and for how long. Delete this heading if there were no interventions.}",
+      "",
+      "  **Main outcome measures** ${19:List the outcomes planned in the protocol and those finally measured.}",
+      "",
+      "  **Results** ${20:Report the main results with 95% confidence intervals (written as 15 to 27) and, where appropriate, absolute risks and the number needed to treat or harm.}",
+      "",
+      "  **Conclusions** ${21:State the primary conclusions and their implications without going beyond the data.}",
+      "",
+      "  **Trial registration** ${22:Give the registry and registration number (last line of the abstract).}",
+      "# Medical Subject Headings (MeSH) descriptors",
+      "keywords:",
+      "  - ${23:Cohort Studies}",
+      "# \"What is already known on this topic\" (2-3 single-sentence bullets) and",
+      "# \"What this study adds\" (1-2 single-sentence bullets)",
+      "summary-box:",
+      "  known:",
+      "    - ${24:Summarise the state of scientific knowledge on this topic before the study.}",
+      "    - ${25:Explain why this study needed to be done.}",
+      "  adds:",
+      "    - ${26:Give a simple answer to \"what do we now know as a result of this study that we did not know before?\", with the single most useful summary statistic.}",
+      "bibliography: ${27:references.bib}",
+      "format:",
+      "  bmj-pdf: default    # preview with line numbers",
+      "  bmj-html: default   # online preview",
+      "  bmj-docx: default   # submission file (BMJ only accepts Word)",
+      "---",
+      "",
+      "$0"
+    ],
+    "description": "Insert a complete BMJ YAML header: title, authors, structured abstract, keywords, summary box and the three BMJ formats."
+  },
+  "BMJ author": {
+    "prefix": "author",
+    "body": [
+      "  - name: ${1:Jane Doe}",
+      "    orcid: ${2:0000-0000-0000-0000}",
+      "    email: ${3:jane.doe@example.org}",
+      "    corresponding: true           # exactly one corresponding author",
+      "    position: ${4:senior lecturer}     # job title shown under the address",
+      "    affiliations:",
+      "      - id: ${5:aff1}",
+      "        department: ${6:Department of Epidemiology}",
+      "        name: ${7:Example University}",
+      "        address: ${8:1 Example Street}",
+      "        city: ${9:London}",
+      "        postal-code: ${10:WC1E 0AA}",
+      "        country: ${11:UK}",
+      "$0"
+    ],
+    "description": "Insert an author entry with the fields The BMJ title page needs (ORCID, email, job title, affiliation). Keep corresponding: true on one author only."
+  },
+  "BMJ structured abstract": {
+    "prefix": "abstract",
+    "body": [
+      "# Structured abstract: 250-300 words (up to 400 for CONSORT/PRISMA abstracts).",
+      "# No references in the abstract.",
+      "abstract: |",
+      "  **Objectives** ${1:State the main aim of the study and the major hypothesis tested or research question posed.}",
+      "",
+      "  **Design** ${2:Give the study design, for example prospective cohort study.}",
+      "",
+      "  **Setting** ${3:Describe the level of care (primary, secondary) and the number of participating centres; give the geographical location if important.}",
+      "",
+      "  **Participants** ${4:Give the numbers entering and completing the study, with sex and ethnic group if appropriate, and how participants were selected.}",
+      "",
+      "  **Interventions** ${5:Describe what, how, when, and for how long. Delete this heading if there were no interventions.}",
+      "",
+      "  **Main outcome measures** ${6:List the outcomes planned in the protocol and those finally measured.}",
+      "",
+      "  **Results** ${7:Report the main results with 95% confidence intervals (written as 15 to 27) and, where appropriate, absolute risks and the number needed to treat or harm.}",
+      "",
+      "  **Conclusions** ${8:State the primary conclusions and their implications without going beyond the data.}",
+      "",
+      "  **Trial registration** ${9:Give the registry and registration number (last line of the abstract).}",
+      "$0"
+    ],
+    "description": "Insert the BMJ structured abstract headings (Objectives to Trial registration)."
+  },
+  "BMJ summary box": {
+    "prefix": "summary-box",
+    "body": [
+      "# \"What is already known on this topic\" (2-3 single-sentence bullets) and",
+      "# \"What this study adds\" (1-2 single-sentence bullets)",
+      "summary-box:",
+      "  known:",
+      "    - ${1:Summarise the state of scientific knowledge on this topic before the study.}",
+      "    - ${2:Explain why this study needed to be done.}",
+      "  adds:",
+      "    - ${3:Give a simple answer to \"what do we now know as a result of this study that we did not know before?\", with the single most useful summary statistic.}",
+      "$0"
+    ],
+    "description": "Insert the \"What is already known on this topic / What this study adds\" summary box metadata."
+  },
+  "BMJ filter options": {
+    "prefix": "options",
+    "body": [
+      "# Options for the BMJ filter (all optional). Put this block under",
+      "# format: bmj-docx: (or bmj-pdf:, bmj-html:) to set it for one format only.",
+      "bmj:",
+      "  figures: ${1|separate,inline|}        # docx default: separate; pdf and html: inline",
+      "  export-figures: ${2|true,false|}      # copy figure files to <name>-figures/ for upload",
+      "  word-count: ${3|true,false|}",
+      "  abstract-word-limit: ${4:300}",
+      "$0"
+    ],
+    "description": "Insert the bmj options block (figures, export-figures, word-count, abstract-word-limit)."
+  },
+  "BMJ statements": {
+    "prefix": "statements",
+    "body": [
+      "::: {.bmj-statements}",
+      "",
+      "**Acknowledgements:** ${1:Acknowledge contributors who do not meet authorship criteria, and any prior presentation of this work at a conference (cite any published conference abstract).}",
+      "",
+      "**Contributors:** ${2:[Describe each author's contribution using their initials and name the guarantor.] Describe any use of artificial intelligence tools here: name the tool, why it was used, and what task it performed. The corresponding author attests that all listed authors meet authorship criteria and that no others meeting the criteria have been omitted.}",
+      "",
+      "**Funding:** ${3:This study was funded by [funder, grant number]. The funder had no role in the study design; in the collection, analysis, and interpretation of data; in the writing of the report; or in the decision to submit the article for publication. All authors, external and internal, had full access to all of the data (including statistical reports and tables) in the study and can take responsibility for the integrity of the data and the accuracy of the data analysis.}",
+      "",
+      "**Competing interests:** ${4:All authors have completed the ICMJE uniform disclosure form at <https://www.icmje.org/disclosure-of-interest/> and declare: no support from any organisation for the submitted work; no financial relationships with any organisations that might have an interest in the submitted work in the previous three years; no other relationships or activities that could appear to have influenced the submitted work.}",
+      "",
+      "**Ethical approval:** ${5:This study was approved by [name of ethics committee] (reference [number]). Participants gave informed consent before taking part.}",
+      "",
+      "**Data sharing:** ${6:[Describe where and how the data can be accessed, or state that data are available on reasonable request.] The analysis code is provided as a supplemental file and is available at [repository URL, commit ID].}",
+      "",
+      "**Transparency:** ${7:The lead author (the manuscript's guarantor) affirms that the manuscript is an honest, accurate, and transparent account of the study being reported; that no important aspects of the study have been omitted; and that any discrepancies from the study as planned (and, if relevant, registered) have been explained.}",
+      "",
+      "**Dissemination to participants and related patient and public communities:** ${8:Describe when and how the results were (or will be) sent to participants and relevant patient and public communities, or explain why not.}",
+      "",
+      "**Licence:** ${9:The Corresponding Author has the right to grant on behalf of all authors and does grant on behalf of all authors, a worldwide licence to the Publishers and its licensees in perpetuity, in all forms, formats and media (whether known now or created in the future), to i) publish, reproduce, distribute, display and store the Contribution, ii) translate the Contribution into other languages, create adaptations, reprints, include within collections and create summaries, extracts and/or, abstracts of the Contribution, iii) create any other derivative work(s) based on the Contribution, iv) to exploit all subsidiary rights in the Contribution, v) the inclusion of electronic links from the Contribution to third party material where-ever it may be located; and, vi) licence any third party to do any or all of the above.}",
+      "",
+      ":::",
+      "",
+      "# References",
+      "",
+      "::: {#refs}",
+      ":::",
+      "$0"
+    ],
+    "description": "Insert the end-of-manuscript statements (contributors, funding, competing interests, licence and so on) in a .bmj-statements div, followed by the reference list."
+  },
+  "BMJ summary box placeholder": {
+    "prefix": "summary-box-placeholder",
+    "body": [
+      "::: {#bmj-summary-box}",
+      ":::",
+      "$0"
+    ],
+    "description": "Place the summary box here instead of directly after the abstract."
+  },
+  "BMJ figure legends placeholder": {
+    "prefix": "figure-legends-placeholder",
+    "body": [
+      "::: {#bmj-figure-legends}",
+      ":::",
+      "$0"
+    ],
+    "description": "Place the Figure legends section here instead of at the end of the manuscript."
+  },
+  "BMJ figure": {
+    "prefix": "figure",
+    "body": [
+      "![${1:Caption. The figure legend must not refer to colour.}](figures/${2:name}){#fig-${3:name}}",
+      "$0"
+    ],
+    "description": "Insert a labelled figure. Leave out the file extension and provide name.pdf (PDF, Word) and name.svg (HTML)."
+  }
+}

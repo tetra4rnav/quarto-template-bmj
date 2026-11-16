@@ -217,12 +217,54 @@ bmj:
   title-page: true           # docx/pdf default; html uses Quarto's title block
 ```
 
+To set an option for one format only, put the `bmj` key under that format.
+Format-level values take precedence over the top-level `bmj` key, and the two
+are merged key by key:
+
+```yaml
+bmj:
+  word-count: false          # all formats
+format:
+  bmj-pdf: default
+  bmj-docx:
+    fig-format: png
+    bmj:
+      figures: inline        # Word only: keep figures in the text
+```
+
 ### Word count
 
 The count covers headings and paragraphs of the main text up to the
 reference list. It leaves out the abstract, tables, figures, captions, code,
 citations, footnotes, the summary box and `.bmj-statements`. Treat it as a
 close estimate of Word's own count.
+
+## Editor support (Quarto Wizard)
+
+The extension ships `_extensions/bmj/_schema.yml` and
+`_extensions/bmj/_snippets.json` for
+[Quarto Wizard](https://m.canouil.dev/quarto-wizard/), which adds completion,
+validation and hover documentation in VS Code and Positron.
+
+- **Schema:** the `bmj` options are described for `bmj-pdf`, `bmj-html` and
+  `bmj-docx`, with each format's own defaults. Completion and validation apply
+  when you write the options under a format (`format: bmj-docx: bmj: ...`).
+  A top-level `bmj` key still works but is not checked by the editor.
+- **Snippets:** type the prefix in a Quarto document, or insert a snippet
+  from the Quarto Wizard explorer. Quarto Wizard shows the prefixes as
+  `tetra4rnav-bmj:<prefix>`.
+
+| Prefix | Inserts |
+|---|---|
+| `front-matter` | Complete YAML header: title, author, structured abstract, keywords, summary box and the three formats |
+| `author` | One author entry with ORCID, email, job title and affiliation |
+| `abstract` | Structured abstract headings |
+| `summary-box` | "What is already known / What this study adds" metadata |
+| `options` | The `bmj` options block |
+| `statements` | `.bmj-statements` div with the required statements, then the reference list |
+| `summary-box-placeholder` | `::: {#bmj-summary-box}` placeholder |
+| `figure-legends-placeholder` | `::: {#bmj-figure-legends}` placeholder |
+| `figure` | Labelled figure without a file extension |
 
 ## Customising the Word styles
 

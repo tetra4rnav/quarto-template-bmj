@@ -17,3 +17,8 @@
 .DS_Store
 Thumbs.db
 __pycache__/
+
+/.luarc.json
+
+# Local editor check for Quarto Wizard (schema/snippets); not part of the template
+/_wizard-check.qmd
