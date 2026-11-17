@@ -129,13 +129,56 @@
       "# Options for the BMJ filter (all optional). Put this block under",
       "# format: bmj-docx: (or bmj-pdf:, bmj-html:) to set it for one format only.",
       "bmj:",
-      "  figures: ${1|separate,inline|}        # docx default: separate; pdf and html: inline",
-      "  export-figures: ${2|true,false|}      # copy figure files to <name>-figures/ for upload",
-      "  word-count: ${3|true,false|}",
-      "  abstract-word-limit: ${4:300}",
+      "  journal: ${1|the-bmj,bmj-global-health|}",
+      "  article-type: ${2|research,global-health-in-practice,editorial,commentary|}",
+      "  figures: ${3|separate,inline|}        # docx default: separate; pdf and html: inline",
+      "  export-figures: ${4|true,false|}      # copy figure files to <name>-figures/ for upload",
+      "  word-count: ${5|true,false|}",
       "$0"
     ],
-    "description": "Insert the bmj options block (figures, export-figures, word-count, abstract-word-limit)."
+    "description": "Insert the bmj options block (journal, article-type, figures, export-figures, word-count)."
+  },
+  "BMJ journal profile": {
+    "prefix": "journal",
+    "body": [
+      "bmj:",
+      "  journal: ${1|the-bmj,bmj-global-health|}",
+      "  article-type: ${2|research,global-health-in-practice,editorial,commentary|}",
+      "  # Optional overrides of the profile's values:",
+      "  # word-limit: 5000",
+      "  # abstract-word-limit: 300",
+      "$0"
+    ],
+    "description": "Select the journal profile and article type, with the word-limit overrides commented out."
+  },
+  "BMJ Global Health summary box (research)": {
+    "prefix": "summary-box-global-health",
+    "body": [
+      "# BMJ Global Health original research: key messages under three headings,",
+      "# no more than 3-5 sentences in all",
+      "summary-box:",
+      "  known:",
+      "    - ${1:Summarise the state of scientific knowledge on this subject before you did your study and why this study needed to be done.}",
+      "  adds:",
+      "    - ${2:Summarise what we now know as a result of this study that we did not know before.}",
+      "  implications:",
+      "    - ${3:Summarise the implications of this study.}",
+      "$0"
+    ],
+    "description": "Insert the BMJ Global Health research summary box: known, adds and implications."
+  },
+  "BMJ key messages list": {
+    "prefix": "key-messages",
+    "body": [
+      "# BMJ Global Health practice articles and commentaries:",
+      "# three to four single-sentence key messages",
+      "summary-box:",
+      "  - ${1:First key message.}",
+      "  - ${2:Second key message.}",
+      "  - ${3:Third key message.}",
+      "$0"
+    ],
+    "description": "Insert a summary box written as a plain list of key messages (BMJ Global Health practice articles and commentaries)."
   },
   "BMJ statements": {
     "prefix": "statements",

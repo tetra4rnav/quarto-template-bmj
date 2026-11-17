@@ -1,0 +1,55 @@
+# Journal profile for BMJ Global Health, selected with
+# `bmj: journal: bmj-global-health`.
+# The fields are described under "Adding a journal" in README.md.
+#
+# The source does not say how many corresponding authors are allowed, so
+# single-corresponding is false. It requires an ORCID iD for the submitting
+# author in the submission system, not in the manuscript, so
+# orcid-corresponding is false.
+
+name: BMJ Global Health
+default-article-type: research
+
+article-types:
+  research:
+    label: original research articles
+    source: https://gh.bmj.com/pages/authors
+    abstract-word-limit: 300
+    word-limit: 5000
+    single-corresponding: false
+    orcid-corresponding: false
+    box:
+      key: summary-box
+      sections:
+        - key: known
+          title: What is already known on this topic
+        - key: adds
+          title: What this study adds
+        - key: implications
+          title: How this study might affect research, practice or policy
+
+  global-health-in-practice:
+    label: Global health in practice articles
+    source: https://gh.bmj.com/pages/authors
+    abstract-word-limit: 250
+    word-limit: 1500
+    single-corresponding: false
+    orcid-corresponding: false
+    box:
+      key: summary-box
+
+  editorial:
+    label: editorials
+    source: https://gh.bmj.com/pages/authors
+    word-limit: 1500
+    single-corresponding: false
+    orcid-corresponding: false
+
+  commentary:
+    label: commentaries
+    source: https://gh.bmj.com/pages/authors
+    word-limit: 1500
+    single-corresponding: false
+    orcid-corresponding: false
+    box:
+      key: summary-box

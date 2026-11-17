@@ -1,7 +1,10 @@
 # BMJ format for Quarto
 
 A [Quarto](https://quarto.org) journal format for preparing manuscripts for
-*The BMJ* and other BMJ journals.
+*The BMJ* and other BMJ journals. Journal profiles set each journal's word
+limits, summary box and author rules; in v0.4.0, profiles are included for
+*The BMJ* and *BMJ Global Health*. More BMJ journals profiles will be added in  
+future releases, or you can create your own.
 
 The format provides three outputs:
 
@@ -28,10 +31,10 @@ rendered as HTML, with links to the PDF and Word versions.
 | Submit a Word document; PDF is not accepted | `bmj-docx` writes a .docx based on a BMJ-style reference document |
 | Heading hierarchy: **BOLD CAPS**, **bold lower case**, plain text, *italics* | Word styles Heading 1 to 4 follow this order, and so do the LaTeX and HTML headings |
 | Title page: authors with ORCID iDs, addresses with job titles, a single corresponding author with full address and email | Built from Quarto's standard `author` / `affiliations` metadata (Word and PDF). HTML uses Quarto's title block |
-| Structured abstract with no references, 250-300 words | Moved to the start of the body as an **ABSTRACT** section (Word and PDF). The filter warns about citations in the abstract or a word count over the limit |
+| Structured abstract with no references, 250-300 words | Moved to the start of the body as an **ABSTRACT** section (Word and PDF). The filter warns about citations in the abstract or a word count over the journal's limit |
 | Manuscripts show results, not code | Code is hidden by default (`echo: false`) |
-| "What is already known on this topic / What this study adds" box | Built from `summary-box` metadata as a bordered box |
-| Word count for the main text, excluding abstract, references, tables, boxes and figures | Shown on the title page and printed in the render log |
+| "What is already known on this topic / What this study adds" box | Built from `summary-box` metadata as a bordered box, with the headings of the selected [journal profile](#journal-profiles) |
+| Word count for the main text, excluding abstract, references, tables, boxes and figures | Shown on the title page and printed in the render log. The filter warns when the count is over the journal's limit |
 | Figures uploaded as separate files, with legends at the end of the manuscript | Figures are removed from the .docx, copied to `<name>-figures/figure-N.ext` and listed under **FIGURE LEGENDS** |
 | Tables in Word format, placed where first cited | Plain Word tables, with captions written as "**Table 1** Caption" |
 | Vancouver references, numbered in order of citation, in square brackets | BMJ CSL style (`[1]`, `[2-4]`) |
@@ -78,6 +81,49 @@ quarto render manuscript.qmd --to bmj-docx
 Code chunks are hidden by default. Set `echo: true` in a chunk or in the
 document to show code.
 
+### Journal profiles
+
+A journal profile holds the rules that differ between BMJ journals and
+article types: the abstract and main-text word limits, the summary box, and
+the corresponding-author and ORCID rules. Select one with `journal` and
+`article-type` under the `bmj` key. Without them, the format uses *The BMJ*
+research article profile.
+
+```yaml
+bmj:
+  journal: bmj-global-health
+  article-type: global-health-in-practice
+```
+
+| `journal` | `article-type` | Abstract limit | Main-text limit | Summary box | Checked |
+|---|---|---|---|---|---|
+| `the-bmj` (default) | `research` (default) | 300 | none | `known`, `adds` | 2026-11-16 |
+| `bmj-global-health` | `research` (default; original research) | 300 | 5000 | `known`, `adds`, `implications` | 2026-11-16 |
+| | `global-health-in-practice` | 250 | 1500 | list of key messages | 2026-11-16 |
+| | `editorial` | none | 1500 | none | 2026-11-16 |
+| | `commentary` | none | 1500 | list of key messages | 2026-11-16 |
+
+The filter warns when the abstract or the main text is over its limit.
+**Checked** is the date the values were last checked against the journal's
+author guidelines, whose URL is the `source` of each article type in
+`_extensions/bmj/journals/`. Requirements change, so check the journal's
+current instructions for authors before you submit.
+
+An unknown `journal` or `article-type` gives a warning, and the format falls
+back to the default profile or article type.
+
+To change a profile value for one document, set it under `bmj`:
+
+```yaml
+bmj:
+  journal: bmj-global-health
+  word-limit: 6000             # e.g. the editor agreed to a longer paper
+  abstract-word-limit: 400
+  box-title: Key messages      # heading at the top of the summary box
+  box-headings:                # section headings, keyed by section
+    known: What is already known
+```
+
 ### Authors and affiliations
 
 Use Quarto's standard [author schema](https://quarto.org/docs/journals/authors.html).
@@ -106,9 +152,12 @@ author:
       - ref: epi
 ```
 
-The format warns when there is no corresponding author, more than one, or
-when the corresponding author has no email address or ORCID iD. The BMJ
-requires an ORCID iD for the corresponding author of research articles.
+The format warns when there is no corresponding author or when the
+corresponding author has no email address. Depending on the
+[journal profile](#journal-profiles), it also warns about more than one
+corresponding author and about a corresponding author without an ORCID iD.
+The BMJ allows one corresponding author and requires an ORCID iD for the
+corresponding author of research articles.
 
 ### Abstract, keywords and summary box
 
@@ -140,6 +189,20 @@ summary-box:
   adds:              # 1-2 single-sentence bullets
     - ...
 ```
+
+The sections of `summary-box` depend on the
+[journal profile](#journal-profiles). *BMJ Global Health* original research
+adds a third section, `implications` ("How this study might affect research,
+practice or policy"). For *BMJ Global Health* practice articles and
+commentaries, `summary-box` is a plain list of key messages:
+
+```yaml
+summary-box:         # BMJ Global Health: global-health-in-practice, commentary
+  - ...              # 3-4 single-sentence key messages
+```
+
+The filter warns about sections the profile does not have and about a
+`summary-box` for an article type without one.
 
 By default the summary box goes directly after the abstract. To put it
 somewhere else, add an empty placeholder div where you want it:
@@ -179,11 +242,14 @@ single composite file. With `bmj-docx` (the default `bmj.figures: separate`),
 each labelled figure (`{#fig-...}`) is handled as follows:
 
 1. It is removed from the body of the Word document. Cross-references such as
+
    `@fig-flow` still read "Figure 1".
 2. Its image file is copied to `<document-name>-figures/figure-1.pdf` (or
+
    `figure-1a.png`, `figure-1b.png` and so on for multi-part figures) for
-   upload.
+    upload.
 3. Its caption is listed under **FIGURE LEGENDS** at the end of the
+
    manuscript, or at a `::: {#bmj-figure-legends}` placeholder if you add one.
 
 The filter warns about formats BMJ does not accept, such as PNG, and about
@@ -207,12 +273,18 @@ All options are optional and go under the `bmj` key:
 
 ```yaml
 bmj:
+  journal: the-bmj           # journal profile; see "Journal profiles"
+  article-type: research     # article type within the profile
+  word-limit: 4000           # warn above this many words in the main text (default: profile)
+  abstract-word-limit: 300   # warn above this many words in the abstract (default: profile)
+  box-title: Key messages    # heading at the top of the summary box (default: profile)
+  box-headings:              # summary box section headings (default: profile)
+    known: What is already known
   figures: separate          # separate (docx default) | inline (pdf and html default)
   export-figures: true       # copy figure files for upload
   figure-dir: my-figures     # default: <document-name>-figures
   flatten-tables: true       # docx: plain tables instead of Quarto's layout table
   word-count: true           # show the word count on the title page
-  abstract-word-limit: 300   # warn above this many words
   page-breaks: true          # docx/pdf default; page breaks after the title page and abstract
   title-page: true           # docx/pdf default; html uses Quarto's title block
 ```
@@ -234,10 +306,41 @@ format:
 
 ### Word count
 
-The count covers headings and paragraphs of the main text up to the
-reference list. It leaves out the abstract, tables, figures, captions, code,
-citations, footnotes, the summary box and `.bmj-statements`. Treat it as a
-close estimate of Word's own count.
+The main-text count starts at the beginning of the body and stops at the
+first of these: the reference list (`::: {#refs}`), a heading with the id
+`references`, or a heading with the class `.appendix`. The abstract is counted
+separately. The filter warns when a count is over the journal profile's limit
+or your own (`word-limit`, `abstract-word-limit`).
+
+| Counted | Not counted |
+|---|---|
+| Headings | Title page |
+| Paragraphs, lists and block quotes | Abstract (counted separately) |
+| Citations, as they appear in the output ("[1]") | Summary box |
+| Cross-references, as they appear in the output ("Figure 1") | Reference list, and anything after it or after an `.appendix` heading |
+| | Tables and their captions |
+| | Figures and their captions |
+| | Statements in a `.bmj-statements` div (acknowledgements, contributors, funding, competing interests and so on) |
+| | Any div with the class `.no-wordcount` |
+| | Footnotes |
+| | Superscript text |
+| | Equations |
+| | Code, inline and in blocks |
+| | Raw TeX or HTML |
+
+Words are counted as Microsoft Word counts them, so the result matches Word's
+count of the same text in the .docx:
+
+- Words are separated by spaces, including no-break spaces, and by en and em
+dashes, so "15–27" is two words.
+- A run of punctuation on its own, such as "-" or "&", is a word.
+- Citations count as they appear in the output: "[1]" is one word and
+"[2–4]" is two. Without a bibliography, each citation counts as one word.
+- Cross-references count as the text they show, so "Figure 1" is two words
+in every format.
+
+Word counts each Chinese, Japanese or Korean character as a word; the filter
+does not, as manuscripts are written in English.
 
 ## Editor support (Quarto Wizard)
 
@@ -247,12 +350,12 @@ The extension ships `_extensions/bmj/_schema.yml` and
 validation and hover documentation in VS Code and Positron.
 
 - **Schema:** the `bmj` options are described for `bmj-pdf`, `bmj-html` and
-  `bmj-docx`, with each format's own defaults. Completion and validation apply
-  when you write the options under a format (`format: bmj-docx: bmj: ...`).
-  A top-level `bmj` key still works but is not checked by the editor.
+`bmj-docx`, with each format's own defaults. Completion and validation apply
+when you write the options under a format (`format: bmj-docx: bmj: ...`).
+A top-level `bmj` key still works but is not checked by the editor.
 - **Snippets:** type the prefix in a Quarto document, or insert a snippet
-  from the Quarto Wizard explorer. Quarto Wizard shows the prefixes as
-  `tetra4rnav-bmj:<prefix>`.
+from the Quarto Wizard explorer. Quarto Wizard shows the prefixes as
+`tetra4rnav-bmj:<prefix>`.
 
 | Prefix | Inserts |
 |---|---|
@@ -260,6 +363,9 @@ validation and hover documentation in VS Code and Positron.
 | `author` | One author entry with ORCID, email, job title and affiliation |
 | `abstract` | Structured abstract headings |
 | `summary-box` | "What is already known / What this study adds" metadata |
+| `summary-box-global-health` | *BMJ Global Health* research summary box (`known`, `adds`, `implications`) |
+| `key-messages` | Summary box as a plain list of key messages |
+| `journal` | `journal` and `article-type`, with the word-limit overrides commented out |
 | `options` | The `bmj` options block |
 | `statements` | `.bmj-statements` div with the required statements, then the reference list |
 | `summary-box-placeholder` | `::: {#bmj-summary-box}` placeholder |
@@ -289,12 +395,76 @@ fork, go to **Settings > Pages** and set **Source** to **GitHub Actions**.
 
 ## Other BMJ journals
 
-The template follows the general BMJ Author Hub guidance and the research
-article requirements of *The BMJ*. Other BMJ journals, such as *BMJ Open* and
-*BMJ Case Reports*, have different article types, abstract headings and boxes.
-Adjust the abstract headings, the summary box and the statements to match the
-journal's instructions for authors. *BMJ Case Reports* requires its own Word
-template.
+The template follows the general BMJ Author Hub guidance, and its
+[journal profiles](#journal-profiles) cover *The BMJ* (research articles) and
+*BMJ Global Health*. For a journal without a profile, such as *BMJ Open*,
+choose the closest profile, override its limits and box headings, and adjust
+the abstract headings and the statements to match the journal's instructions
+for authors. *BMJ Case Reports* requires its own Word template.
+
+The profiles check word limits, the summary box and the corresponding-author
+rules only. Other requirements, such as limits on tables, figures and
+references, abstract headings and required statements, are not checked.
+
+### Adding a journal
+
+A journal profile is a YAML file in `_extensions/bmj/journals/`. Adding a
+journal needs no change to `bmj.lua`.
+
+1. Copy `_extensions/bmj/journals/the-bmj.yml` to
+
+   `_extensions/bmj/journals/<journal>.yml`. The file name, without `.yml`,
+    is the value of `bmj.journal`. Use lower-case letters, digits and hyphens
+    only; the filter does not read other names.
+2. Fill in the fields described below from the journal's instructions for
+
+   authors. Write every value out in full: profiles do not inherit from each
+    other, even where journals share a rule.
+3. In `_extensions/bmj/_schema.yml`, add the journal to the `journal` enum
+
+   under `bmj-pdf`, and any new article types to the `article-type` enum.
+    `bmj-html` and `bmj-docx` refer to the same definitions, so one edit
+    covers all three formats. For a new box section, add its key under
+    `box-headings` too, so that editors offer it.
+4. Render a test document with `bmj: journal: <journal>` and each
+
+   `article-type`. Check that the warnings name the journal and that the
+    summary box has the expected headings. A mistake in a profile stops the
+    render with a message that names the file and the field.
+5. Add the journal to the table under [Journal profiles](#journal-profiles),
+
+   with the date you checked the values against the author guidelines in the
+    **Checked** column. Record the date there, not in the profile file. When
+    you recheck a profile later, update its date.
+
+Fields of a profile file:
+
+```yaml
+name: BMJ Global Health          # display name used in messages
+default-article-type: research   # used when bmj.article-type is not set
+
+article-types:                   # one entry per value of bmj.article-type
+  research:
+    label: original research articles  # plural noun used in messages
+    source: https://...          # URL of the author guidelines
+    abstract-word-limit: 300     # optional; omit for no abstract check
+    abstract-guidance: ...       # optional; replaces "no more than N words"
+                                 # in the abstract warning
+    word-limit: 5000             # optional; omit for no main-text limit
+    single-corresponding: false  # true: warn about more than one
+                                 # corresponding author and show only the first
+    orcid-corresponding: false   # true: warn when a corresponding author
+                                 # has no ORCID iD
+    box:                         # optional; omit for no summary box
+      key: summary-box           # metadata key that holds the box content
+      title: ...                 # optional heading at the top of the box
+      sections:                  # optional; each section is a list of bullets
+        - key: known             #   under summary-box.known, and so on
+          title: What is already known on this topic
+```
+
+Without `sections`, the box's metadata key holds a plain list of bullets.
+Write strings that contain a colon in quotes.
 
 ## License
 
