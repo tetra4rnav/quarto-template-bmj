@@ -6,8 +6,9 @@ Runs after Quarto's own filters (`at: post-quarto`) and
   * builds a BMJ-style title page from Quarto's normalised author and
     affiliation metadata (authors with ORCID iDs, numbered addresses with
     job titles, a single corresponding author, keywords and word counts);
-  * moves the structured abstract into the body, followed by the
-    "What is already known on this topic / What this study adds" box;
+  * moves the structured abstract into the body, followed by the journal's
+    summary box (for The BMJ: "What is already known on this topic / What
+    this study adds");
   * optionally removes figures from the body (BMJ wants figures uploaded as
     separate files), exports their image files with submission-friendly
     names and lists the figure legends at the end of the manuscript;
@@ -15,10 +16,19 @@ Runs after Quarto's own filters (`at: post-quarto`) and
     tables, boxes, figures and the end-of-manuscript statements) and warns
     about common submission problems.
 
+Journal-specific rules (word limits, the summary box, the corresponding-author
+and ORCID rules) come from the journal profile selected by `bmj.journal` and
+`bmj.article-type`. Each journal is a YAML file in journals/; README.md
+describes the fields under "Adding a journal".
+
 Options live under the `bmj` metadata key; see README.md.
 ]]
 
 local stringify = pandoc.utils.stringify
+
+-- Resolved while the filter is loaded, relative to this file
+local JOURNAL_DIR = quarto.utils.resolve_path("journals")
+local DEFAULT_JOURNAL = "the-bmj"
 
 local opts = {}
 local legends = pandoc.List()
@@ -31,6 +41,12 @@ local stats = { main = nil, abstract = nil }
 
 local function warn(msg)
   quarto.log.warning("[bmj] " .. msg)
+end
+
+--- Stop the render. Quarto replaces the global `error` with a function that
+--- only logs, so raise the error through `assert`, which it leaves alone.
+local function abort(msg)
+  assert(false, "[bmj] " .. msg)
 end
 
 local function is_docx()
@@ -150,10 +166,26 @@ local excluded_div_classes = {
 }
 
 local strip_for_count = {
-  Cite = function() return {} end,
+  Cite = function(cite)
+    -- Citations count as the text the reader sees ("[1]", "[2–4]"); see
+    -- with_rendered_citations. One that citeproc did not render still
+    -- holds the citation keys: count it as one word.
+    local text = stringify(cite.content)
+    if text == "" or text:find("@") then
+      return pandoc.Str("[1]")
+    end
+    return cite.content
+  end,
   Note = function() return {} end,
   Superscript = function() return {} end,
-  RawInline = function() return {} end,
+  RawInline = function(raw)
+    -- LaTeX cross-references: Quarto writes "Figure~\ref{fig-x}" where other
+    -- formats have "Figure 1", so count the reference as the number it shows.
+    if raw.format == "latex" and raw.text:match("^\\ref%b{}$") then
+      return pandoc.Str("1")
+    end
+    return {}
+  end,
   Math = function() return {} end,
   Code = function() return {} end,
   Table = function() return {} end,
@@ -173,18 +205,62 @@ local strip_for_count = {
   end,
 }
 
+--- Replace the characters that separate words in Microsoft Word's count with
+--- an ASCII space: Unicode spaces (no-break space, the U+2000 spaces, narrow
+--- no-break space, medium mathematical space, ideographic space) and the en
+--- and em dashes. Quarto joins "Figure" and its number with a no-break space.
+local function normalise_separators(text)
+  return (text
+    :gsub("\xC2\xA0", " ")
+    :gsub("\xE2\x80[\x80-\x8B\xAF]", " ")
+    :gsub("\xE2\x80[\x93\x94]", " ")
+    :gsub("\xE2\x81\x9F", " ")
+    :gsub("\xE3\x80\x80", " "))
+end
+
+--- Count words as Microsoft Word does: split the text at spaces (and the
+--- characters above) and count every remaining run of characters, including
+--- runs of punctuation only such as "-" or "&".
 local function count_words(blocks)
-  local n = 0
   local doc = pandoc.Pandoc(pandoc.Blocks(blocks)):walk(strip_for_count)
+  local parts = {}
+  local function sep()
+    table.insert(parts, " ")
+  end
+  -- top-down, so that elements are visited in document order and each block
+  -- starts with a separator
   doc:walk({
+    traverse = "topdown",
+    Block = sep,
+    Space = sep,
+    SoftBreak = sep,
+    LineBreak = sep,
     Str = function(s)
-      -- count tokens that contain at least one letter or digit
-      if s.text:find("[%w\128-\255]") then
-        n = n + 1
-      end
+      table.insert(parts, s.text)
     end,
   })
+  local n = 0
+  for _ in normalise_separators(table.concat(parts)):gmatch("%S+") do
+    n = n + 1
+  end
   return n
+end
+
+--- A copy of `doc` with the citations rendered by citeproc, so that they are
+--- counted as they appear in the output. Quarto runs citeproc only after
+--- this filter. Returns `doc` itself when there is nothing to render or
+--- citeproc fails (for example without a bibliography).
+local function with_rendered_citations(doc)
+  local has_cite = false
+  doc:walk({ Cite = function() has_cite = true end })
+  if not has_cite then
+    return doc
+  end
+  local ok, rendered = pcall(pandoc.utils.citeproc, doc)
+  if ok and rendered then
+    return rendered
+  end
+  return doc
 end
 
 --- Main text = everything before the reference list / an appendix.
@@ -213,11 +289,234 @@ local function has_cite(blocks)
 end
 
 -- ---------------------------------------------------------------------------
+-- Journal profiles (journals/<journal>.yml)
+-- ---------------------------------------------------------------------------
+
+local function sorted_keys(t)
+  local keys = {}
+  for k in pairs(t) do
+    table.insert(keys, k)
+  end
+  table.sort(keys)
+  return keys
+end
+
+local function read_file(path)
+  local f = io.open(path, "rb")
+  if not f then
+    return nil
+  end
+  local data = f:read("a")
+  f:close()
+  return data
+end
+
+--- Turn parsed YAML metadata into plain Lua values (strings, booleans,
+--- arrays and tables), so profile values can be compared directly.
+local function plain(v)
+  if type(v) == "boolean" or type(v) == "string" then
+    return v
+  end
+  local t = pandoc.utils.type(v)
+  if t == "Inlines" or t == "Blocks" then
+    return stringify(v)
+  end
+  local out = {}
+  if t == "List" then
+    for i, x in ipairs(v) do
+      out[i] = plain(x)
+    end
+  elseif type(v) == "table" then
+    for k, x in pairs(v) do
+      out[k] = plain(x)
+    end
+  else
+    return stringify(v)
+  end
+  return out
+end
+
+local function known_journals()
+  local names = {}
+  for _, f in ipairs(pandoc.system.list_directory(JOURNAL_DIR)) do
+    local stem, ext = pandoc.path.split_extension(f)
+    if ext == ".yml" then
+      table.insert(names, stem)
+    end
+  end
+  table.sort(names)
+  return names
+end
+
+--- Read journals/<name>.yml, or nil if there is no such journal.
+local function load_journal(name)
+  -- the name becomes a file path: allow only plain profile names
+  if not name:match("^[a-z0-9][a-z0-9-]*$") then
+    return nil
+  end
+  local file = pandoc.path.join({ JOURNAL_DIR, name .. ".yml" })
+  local text = read_file(file)
+  if text == nil then
+    return nil
+  end
+  -- Pandoc reads YAML through a Markdown metadata block; "-smart" keeps
+  -- quotes and dashes in the strings as written.
+  local meta = pandoc.read("---\n" .. text .. "\n---\n", "markdown-smart").meta
+  return plain(meta), file
+end
+
+--- Check the fields bmj.lua relies on, so that a mistake in a profile file
+--- stops the render with a message that names the file and the field.
+local function check_profile(p, file, type_key)
+  local where = file .. ", article-types." .. type_key .. ": "
+  local function fail(msg)
+    abort(where .. msg)
+  end
+  if type(p.name) ~= "string" or p.name == "" then
+    fail("missing 'name'")
+  end
+  if type(p.label) ~= "string" or p.label == "" then
+    fail("missing 'label'")
+  end
+  for _, key in ipairs({ "abstract-word-limit", "word-limit" }) do
+    if p[key] ~= nil then
+      local n = tonumber(p[key])
+      if n == nil or n < 1 or n ~= math.floor(n) then
+        fail("'" .. key .. "' must be a positive whole number")
+      end
+      p[key] = n
+    end
+  end
+  for _, key in ipairs({ "single-corresponding", "orcid-corresponding" }) do
+    if p[key] == nil then
+      p[key] = false
+    elseif type(p[key]) ~= "boolean" then
+      fail("'" .. key .. "' must be true or false")
+    end
+  end
+  local box = p.box
+  if box ~= nil then
+    if type(box.key) ~= "string" or box.key == "" then
+      fail("'box' needs a 'key'")
+    end
+    box.sections = box.sections or {}
+    for i, s in ipairs(box.sections) do
+      if type(s.key) ~= "string" or type(s.title) ~= "string" then
+        fail("'box.sections' entry " .. i .. " needs a 'key' and a 'title'")
+      end
+    end
+    if box.title ~= nil and type(box.title) ~= "string" then
+      fail("'box.title' must be text")
+    end
+  end
+end
+
+--- Select the journal and article type. Unknown names fall back to the
+--- defaults with a warning.
+local function resolve_profile(bmj)
+  local journal_key = meta_string(bmj.journal, DEFAULT_JOURNAL)
+  local journal, file = load_journal(journal_key)
+  if journal == nil then
+    warn(string.format("unknown bmj.journal '%s' (known: %s); using '%s'",
+      journal_key, table.concat(known_journals(), ", "), DEFAULT_JOURNAL))
+    journal_key = DEFAULT_JOURNAL
+    journal, file = load_journal(journal_key)
+    if journal == nil then
+      abort("cannot read the default journal profile journals/" .. DEFAULT_JOURNAL .. ".yml")
+    end
+  end
+  local types = journal["article-types"] or {}
+  local default_type = journal["default-article-type"]
+  local type_key = meta_string(bmj["article-type"], default_type)
+  local article = types[type_key]
+  if article == nil then
+    warn(string.format("%s has no bmj.article-type '%s' (known: %s); using '%s'",
+      journal.name, type_key, table.concat(sorted_keys(types), ", "), tostring(default_type)))
+    type_key = default_type
+    article = types[type_key]
+    if article == nil then
+      abort(file .. ": 'default-article-type' does not name an entry in 'article-types'")
+    end
+  end
+  local p = {}
+  for k, v in pairs(article) do
+    p[k] = v
+  end
+  p.name = journal.name
+  p.journal = journal_key
+  p.article_type = type_key
+  check_profile(p, file, type_key)
+  return p
+end
+
+-- ---------------------------------------------------------------------------
 -- Pass 1: options, word counts, checks
 -- ---------------------------------------------------------------------------
 
+--- A positive whole-number option, or `fallback` (with a warning if invalid).
+local function count_option(v, name, fallback)
+  if not nonempty(v) then
+    return fallback
+  end
+  local n = tonumber(stringify(v))
+  if n == nil or n < 1 or n ~= math.floor(n) then
+    warn(string.format("bmj.%s must be a positive whole number; using %s",
+      name, fallback and tostring(fallback) or "no limit"))
+    return fallback
+  end
+  return n
+end
+
+--- Copy the profile's box and apply `box-title` / `box-headings` overrides.
+local function resolve_box(profile, bmj)
+  local box = profile.box
+  if box == nil then
+    if nonempty(bmj["box-title"]) or bmj["box-headings"] ~= nil then
+      warn(string.format("%s %s have no summary box; bmj.box-title and bmj.box-headings are ignored",
+        profile.name, profile.label))
+    end
+    return nil
+  end
+  local out = { key = box.key, title = box.title, sections = {} }
+  for _, s in ipairs(box.sections) do
+    table.insert(out.sections, { key = s.key, title = s.title })
+  end
+  if nonempty(bmj["box-title"]) then
+    out.title = stringify(bmj["box-title"])
+  end
+  local headings = bmj["box-headings"]
+  if headings ~= nil then
+    if type(headings) ~= "table" or pandoc.utils.type(headings) == "List" then
+      warn("bmj.box-headings must map section names to headings; ignored")
+    else
+      for _, key in ipairs(sorted_keys(headings)) do
+        local section
+        for _, s in ipairs(out.sections) do
+          if s.key == key then
+            section = s
+          end
+        end
+        if section then
+          section.title = stringify(headings[key])
+        else
+          warn(string.format("bmj.box-headings.%s is ignored: the box for %s %s has no section '%s'",
+            key, profile.name, profile.label, key))
+        end
+      end
+    end
+  end
+  return out
+end
+
 local function read_options(meta)
   local bmj = meta.bmj or {}
+  local profile = resolve_profile(bmj)
+  opts.profile = profile
+  opts.box = resolve_box(profile, bmj)
+  opts.abstract_limit = count_option(bmj["abstract-word-limit"], "abstract-word-limit",
+    profile["abstract-word-limit"])
+  opts.word_limit = count_option(bmj["word-limit"], "word-limit", profile["word-limit"])
+
   local default_figures = is_docx() and "separate" or "inline"
   opts.figures = meta_string(bmj.figures, default_figures)
   if opts.figures ~= "separate" and opts.figures ~= "inline" then
@@ -227,7 +526,6 @@ local function read_options(meta)
   opts.export_figures = meta_bool(bmj["export-figures"], true)
   opts.figure_dir = meta_string(bmj["figure-dir"], nil)
   opts.word_count = meta_bool(bmj["word-count"], true)
-  opts.abstract_limit = tonumber(meta_string(bmj["abstract-word-limit"], "300")) or 300
   -- HTML uses Quarto's own title block (authors, affiliations, abstract)
   opts.page_breaks = meta_bool(bmj["page-breaks"], not is_html())
   opts.title_page = meta_bool(bmj["title-page"], not is_html())
@@ -237,17 +535,32 @@ local function read_options(meta)
   opts.abstract_title = meta_string(meta["abstract-title"], "Abstract")
 end
 
+--- Warning text for a count over its limit. When the document overrides the
+--- profile's limit, name the option instead of quoting the journal.
+local function limit_message(what, n, limit, option, profile_limit, guidance)
+  if limit ~= profile_limit then
+    return string.format("%s has %d words, more than bmj.%s (%d)", what, n, option, limit)
+  end
+  local p = opts.profile
+  return string.format("%s has %d words; %s asks for %s", what, n, p.name,
+    guidance or string.format("no more than %d words for %s", limit, p.label))
+end
+
 local pass_setup = {
   Pandoc = function(doc)
     read_options(doc.meta)
-    stats.main = count_words(main_text_blocks(doc.blocks))
+    local p = opts.profile
+    local counted = with_rendered_citations(doc)
+    stats.main = count_words(main_text_blocks(counted.blocks))
+    if opts.word_limit and stats.main > opts.word_limit then
+      warn(limit_message("main text", stats.main, opts.word_limit, "word-limit", p["word-limit"]))
+    end
     if doc.meta.abstract ~= nil then
       local abstract = to_blocks(doc.meta.abstract)
-      stats.abstract = count_words(abstract)
-      if stats.abstract > opts.abstract_limit then
-        warn(string.format(
-          "abstract has %d words; The BMJ asks for 250-300 words (up to 400 for CONSORT/PRISMA abstracts)",
-          stats.abstract))
+      stats.abstract = count_words(to_blocks(counted.meta.abstract or doc.meta.abstract))
+      if opts.abstract_limit and stats.abstract > opts.abstract_limit then
+        warn(limit_message("abstract", stats.abstract, opts.abstract_limit, "abstract-word-limit",
+          p["abstract-word-limit"], p["abstract-guidance"]))
       end
       if has_cite(abstract) then
         warn("BMJ: references should not be included in the abstract")
@@ -296,16 +609,6 @@ local function figure_dir()
     stem = pandoc.path.split_extension(pandoc.path.filename(quarto.doc.input_file))
   end
   return pandoc.path.join({ input_dir(), stem .. "-figures" })
-end
-
-local function read_file(path)
-  local f = io.open(path, "rb")
-  if not f then
-    return nil
-  end
-  local data = f:read("a")
-  f:close()
-  return data
 end
 
 local accepted_ext = { tif = true, tiff = true, eps = true, jpg = true, jpeg = true, pdf = true }
@@ -556,30 +859,33 @@ local function build_title_page(meta)
     front:insert(pandoc.Para(inl))
   end
 
-  -- Corresponding author
+  -- Corresponding author(s)
+  local p = opts.profile
   if #corresponding == 0 then
     warn("no corresponding author; mark one author with 'corresponding: true'")
   else
-    if #corresponding > 1 then
-      warn("The BMJ allows only one corresponding author; using the first")
+    if #corresponding > 1 and p["single-corresponding"] then
+      warn(p.name .. " allows only one corresponding author; using the first")
+      corresponding = pandoc.List({ corresponding[1] })
     end
-    local c = corresponding[1]
-    local inl = pandoc.Inlines({ pandoc.Strong(pandoc.Inlines("Correspondence to:")), pandoc.Space() })
-    inl:extend(author_name(c))
-    local first_aff = c.affiliations and c.affiliations[1]
-    if first_aff then
-      inl:extend({ pandoc.Str(","), pandoc.Space() })
-      inl:extend(pandoc.Inlines(format_affiliation(first_aff)))
+    for _, c in ipairs(corresponding) do
+      local inl = pandoc.Inlines({ pandoc.Strong(pandoc.Inlines("Correspondence to:")), pandoc.Space() })
+      inl:extend(author_name(c))
+      local first_aff = c.affiliations and c.affiliations[1]
+      if first_aff then
+        inl:extend({ pandoc.Str(","), pandoc.Space() })
+        inl:extend(pandoc.Inlines(format_affiliation(first_aff)))
+      end
+      if nonempty(c.email) then
+        inl:extend({ pandoc.Str(";"), pandoc.Space(), pandoc.Str(stringify(c.email)) })
+      else
+        warn("the corresponding author has no email address")
+      end
+      if p["orcid-corresponding"] and not nonempty(c.orcid) then
+        warn(p.name .. " requires an ORCID iD for the corresponding author of " .. p.label)
+      end
+      front:insert(pandoc.Para(inl))
     end
-    if nonempty(c.email) then
-      inl:extend({ pandoc.Str(";"), pandoc.Space(), pandoc.Str(stringify(c.email)) })
-    else
-      warn("the corresponding author has no email address")
-    end
-    if not nonempty(c.orcid) then
-      warn("The BMJ requires an ORCID iD for the corresponding author of research articles")
-    end
-    front:insert(pandoc.Para(inl))
   end
 
   -- Keywords, date, word counts
@@ -613,45 +919,102 @@ local function build_title_page(meta)
   return blocks
 end
 
-local function summary_box(meta)
-  local sb = meta["summary-box"]
-  if sb == nil then
-    return nil
+local function box_heading(text)
+  local title = pandoc.Para({ pandoc.Strong(pandoc.Inlines(text)) })
+  if is_docx() then
+    return styled({ title }, "BMJ Box Heading")
   end
-  local sections = {
-    { key = "known", title = "What is already known on this topic" },
-    { key = "adds", title = "What this study adds" },
-  }
+  return title
+end
+
+local function box_bullets(items)
+  if is_docx() then
+    -- Word joins adjacent paragraphs with identical borders into one
+    -- box, but Pandoc list items do not take a custom paragraph style,
+    -- so write the bullets as plain paragraphs.
+    local out = pandoc.Blocks({})
+    for _, item in ipairs(items) do
+      local inl = pandoc.Inlines({ pandoc.Str("\u{2022}"), pandoc.Space() })
+      inl:extend(to_inlines(item))
+      out:insert(pandoc.Para(inl))
+    end
+    return out
+  end
+  local list_items = pandoc.List()
+  for _, item in ipairs(items) do
+    list_items:insert({ pandoc.Plain(to_inlines(item)) })
+  end
+  return pandoc.Blocks({ pandoc.BulletList(list_items) })
+end
+
+local function is_map(v)
+  return type(v) == "table" and pandoc.utils.type(v) ~= "List"
+    and pandoc.utils.type(v) ~= "Inlines" and pandoc.utils.type(v) ~= "Blocks"
+end
+
+--- Contents of the profile's box: one bullet list per section, or a single
+--- bullet list when the box has no sections.
+local function box_content(box, value)
+  local p = opts.profile
   local inner = pandoc.Blocks({})
-  for _, s in ipairs(sections) do
-    local items = as_list(sb[s.key])
+  if #box.sections == 0 then
+    if is_map(value) then
+      warn(string.format("%s should be a list of bullets for %s %s; ignored", box.key, p.name, p.label))
+      return inner
+    end
+    local items = as_list(value)
     if #items > 0 then
-      local title = pandoc.Para({ pandoc.Strong(pandoc.Inlines(s.title)) })
-      if is_docx() then
-        inner:insert(styled({ title }, "BMJ Box Heading"))
-      else
-        inner:insert(title)
-      end
-      if is_docx() then
-        -- Word joins adjacent paragraphs with identical borders into one
-        -- box, but Pandoc list items do not take a custom paragraph style,
-        -- so write the bullets as plain paragraphs.
-        for _, item in ipairs(items) do
-          local inl = pandoc.Inlines({ pandoc.Str("\u{2022}"), pandoc.Space() })
-          inl:extend(to_inlines(item))
-          inner:insert(pandoc.Para(inl))
-        end
-      else
-        local list_items = pandoc.List()
-        for _, item in ipairs(items) do
-          list_items:insert({ pandoc.Plain(to_inlines(item)) })
-        end
-        inner:insert(pandoc.BulletList(list_items))
-      end
+      inner:extend(box_bullets(items))
+    end
+    return inner
+  end
+
+  if not is_map(value) then
+    local names = {}
+    for _, s in ipairs(box.sections) do
+      table.insert(names, s.key)
+    end
+    warn(string.format("%s should have the sections %s for %s %s; ignored",
+      box.key, table.concat(names, ", "), p.name, p.label))
+    return inner
+  end
+  local known = {}
+  for _, s in ipairs(box.sections) do
+    known[s.key] = true
+    local items = as_list(value[s.key])
+    if #items > 0 then
+      inner:insert(box_heading(s.title))
+      inner:extend(box_bullets(items))
     end
   end
+  for _, key in ipairs(sorted_keys(value)) do
+    if not known[key] then
+      warn(string.format("%s.%s is ignored: the box for %s %s has no section '%s'",
+        box.key, key, p.name, p.label, key))
+    end
+  end
+  return inner
+end
+
+local function summary_box(meta)
+  local box = opts.box
+  if box == nil then
+    if meta["summary-box"] ~= nil then
+      warn(string.format("%s %s have no summary box; summary-box is ignored",
+        opts.profile.name, opts.profile.label))
+    end
+    return nil
+  end
+  local value = meta[box.key]
+  if value == nil then
+    return nil
+  end
+  local inner = box_content(box, value)
   if #inner == 0 then
     return nil
+  end
+  if box.title then
+    inner:insert(1, box_heading(box.title))
   end
   if is_docx() then
     return styled(inner, "BMJ Box")

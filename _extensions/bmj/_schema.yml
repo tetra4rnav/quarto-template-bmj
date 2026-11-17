@@ -19,6 +19,36 @@ formats:
       description: "Options for the BMJ filter (all optional). Values here override a top-level `bmj` key."
       additionalProperties: false
       properties:
+        journal: &journal
+          type: string
+          enum: [the-bmj, bmj-global-health]
+          default: the-bmj
+          description: "Journal profile: sets the word limits, the summary box and the corresponding-author and ORCID rules. Profiles are the files in `_extensions/bmj/journals/`."
+        article-type: &article-type
+          type: string
+          enum: [research, global-health-in-practice, editorial, commentary]
+          default: research
+          description: "Article type within the journal profile. The BMJ: `research`. BMJ Global Health: `research` (original research), `global-health-in-practice`, `editorial`, `commentary`."
+        word-limit: &word-limit
+          type: integer
+          minimum: 1
+          description: "Warn when the main text is longer than this many words. Defaults to the journal profile's limit (none for The BMJ research articles)."
+        box-title: &box-title
+          type: string
+          description: "Heading at the top of the summary box. Overrides the journal profile's box title."
+        box-headings: &box-headings
+          type: object
+          description: "Section headings of the summary box, keyed by section. Overrides the journal profile's headings."
+          properties:
+            known:
+              type: string
+              description: "Heading of `summary-box.known` (default \"What is already known on this topic\")."
+            adds:
+              type: string
+              description: "Heading of `summary-box.adds` (default \"What this study adds\")."
+            implications:
+              type: string
+              description: "BMJ Global Health research: heading of `summary-box.implications` (default \"How this study might affect research, practice or policy\")."
         figures:
           type: string
           enum: [inline, separate]
@@ -44,8 +74,7 @@ formats:
         abstract-word-limit: &abstract-word-limit
           type: integer
           minimum: 1
-          default: 300
-          description: "Warn when the abstract is longer than this many words. The BMJ asks for 250-300 words (up to 400 for CONSORT or PRISMA abstracts)."
+          description: "Warn when the abstract is longer than this many words. Defaults to the journal profile's limit: 300 for The BMJ research articles, which asks for 250-300 words (up to 400 for CONSORT or PRISMA abstracts)."
         page-breaks:
           type: boolean
           default: true
@@ -62,6 +91,11 @@ formats:
       description: "Options for the BMJ filter (all optional). Values here override a top-level `bmj` key."
       additionalProperties: false
       properties:
+        journal: *journal
+        article-type: *article-type
+        word-limit: *word-limit
+        box-title: *box-title
+        box-headings: *box-headings
         figures:
           type: string
           enum: [inline, separate]
@@ -88,6 +122,11 @@ formats:
       description: "Options for the BMJ filter (all optional). Values here override a top-level `bmj` key."
       additionalProperties: false
       properties:
+        journal: *journal
+        article-type: *article-type
+        word-limit: *word-limit
+        box-title: *box-title
+        box-headings: *box-headings
         figures:
           type: string
           enum: [separate, inline]

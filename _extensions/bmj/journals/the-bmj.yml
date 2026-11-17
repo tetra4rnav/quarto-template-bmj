@@ -1,0 +1,26 @@
+# Journal profile for The BMJ, selected with `bmj: journal: the-bmj`.
+# The fields are described under "Adding a journal" in README.md.
+#
+# The research article page (`source`) sets the abstract limit, the summary
+# box and no main-text limit. The single corresponding author and the ORCID
+# iD for the corresponding author come from the general guidance for all
+# article types: https://www.bmj.com/about-bmj/resources-authors/article-types
+
+name: The BMJ
+default-article-type: research
+
+article-types:
+  research:
+    label: research articles
+    source: https://www.bmj.com/about-bmj/resources-authors/article-types/research
+    abstract-word-limit: 300
+    abstract-guidance: 250-300 words (up to 400 for CONSORT/PRISMA abstracts)
+    single-corresponding: true
+    orcid-corresponding: true
+    box:
+      key: summary-box
+      sections:
+        - key: known
+          title: What is already known on this topic
+        - key: adds
+          title: What this study adds
